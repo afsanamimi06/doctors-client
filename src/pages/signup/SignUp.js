@@ -1,12 +1,11 @@
 import React from 'react';
-import { useSignInWithEmailAndPassword, useSignInWithGoogle } from 'react-firebase-hooks/auth';
+import { useCreateUserWithEmailAndPassword, useSignInWithGoogle, useUpdateProfile } from 'react-firebase-hooks/auth';
 import auth from '../../firebase.init'
 import { useForm } from "react-hook-form"
 import Loading from '../shared/Loading';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-
-const Login = () => {
+const SignUp = () => {
     const [signInWithGoogle, gUser, gLoading, gError] = useSignInWithGoogle(auth);
     const {
         register,
@@ -14,36 +13,38 @@ const Login = () => {
         handleSubmit,
       } = useForm();
 
-      const [
-        signInWithEmailAndPassword,
-        user,
-        loading,
-        error,
-      ] = useSignInWithEmailAndPassword(auth);
+const [
+  createUserWithEmailAndPassword,
+  user,
+  loading,
+  error,
+] = useCreateUserWithEmailAndPassword(auth);
+
+const [updateProfile, updating, updateError] = useUpdateProfile(auth);
+const navigate = useNavigate();
 
 
 let signInError;
-const navigate = useNavigate();
-const location = useLocation();
-let from = location.state?.from?.pathname || "/";
 
-    if(loading || gLoading){
+    if(loading || gLoading ||updating){
     return <Loading></Loading>
 };
 
-if(error || gError){
-    signInError = <small className='text-red-500'>{error?.message || gError?.message}</small>
+if(error || gError || updateError){
+    signInError = <small className='text-red-500'>{error?.message || gError?.message || updateError?.message}</small>
 }
 
 
 if(user || gUser){
     console.log(gUser);
-    navigate(from, { replace: true} );
 };
 
-const onSubmit = (data) => {
+const onSubmit = async data => {
     console.log(data)
-    signInWithEmailAndPassword(data.email, data.password)
+    await createUserWithEmailAndPassword(data.email, data.password)
+    await updateProfile({ displayName: data.name})
+    console.log('update done')
+    navigate('/appointment')
 }
 
 
@@ -51,8 +52,16 @@ return (
 <div className='flex h-screen justify-center items-center'>
 <div class="card w-96 bg-base-100 shadow-xl">
   <div class="card-body">
-    <h2 class="text-center text-2xl font-bold">Login</h2>
+    <h2 class="text-center text-2xl font-bold">Sign Up</h2>
     <form onSubmit={handleSubmit(onSubmit)}>
+
+    <div className="form-control w-full max-w-xs">
+                        <label className="label"> <span className="label-text">Name</span></label>
+                        <input type="text" {...register("name", {
+                            required: "Name is Required"
+                        })} className="input input-bordered w-full max-w-xs" />
+                        {errors.name && <p className='text-red-500'>{errors.name.message}</p>}
+                    </div>
     
     <div className="form-control w-full max-w-xs">
                         <label className="label"> <span className="label-text">Email</span></label>
@@ -76,10 +85,9 @@ return (
                         {errors.password && <p className='text-red-600'>{errors.password?.message}</p>}
                     </div>
                     {signInError}
-                    <input className='btn btn-accent w-full' value="Login" type="submit" />
+                    <input className='btn btn-accent w-full uppercase' value="Sign Up" type="submit" />
     </form>
-    <p>New to Doctors Portal <Link className='text-secondary' to="/signup">|| Create new Account</Link></p>
-    <div class="divider">OR</div>
+    <p>Already have an account <Link className='text-secondary' to="/login">Please Login</Link></p>    <div class="divider">OR</div>
     <button 
     onClick={()=>signInWithGoogle()}
     class="btn btn-outline">Continue with Google</button>
@@ -89,4 +97,4 @@ return (
 );
 };
 
-export default Login;
+export default SignUp;

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AppointmentBanner from './AppointmentBanner';
 import AvailableAppointments from './AvailableAppointments';
+import Footer from '../homepage/Footer';
 
 
 const Appointment = () => {
@@ -14,6 +15,7 @@ const Appointment = () => {
             <AvailableAppointments
                 selectedDate={selectedDate}
             ></AvailableAppointments>
+            <Footer></Footer>
         </div>
     );
 };
